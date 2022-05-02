@@ -74,7 +74,7 @@ YTStream.search = function(query, numResults)
 end
 
 YTStream.load = function(selection)
-    fUtils.writeC(colors.yellow, "Requesting stream for")
+    fUtils.writeC(colors.yellow, "Requesting stream for: ")
     fUtils.writeC(colors.green, selection.title .. '\n')
     YTStream.ws.send(json.encode({type = "requestStream", videoInfo = selection}))
     YTStream.loaded = true
