@@ -89,7 +89,7 @@ end
 YTStream.stopCheck = function()
     if YTStream.finishedLoading and #YTStream.buffer == 0 then
         YTStream.finishedPlaying = true
-        sleep(.1)
+        sleep(.5)
     end
 end
 

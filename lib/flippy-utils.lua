@@ -36,9 +36,12 @@ fUtils.peripheral.wrapAll = function(type)
     local methodNames = peripheral.getMethods(peripheralNames[1])
     for _, method in ipairs(methodNames) do 
         group[method] = function(...)
+            local ret
             for _, name in ipairs(peripheralNames) do
-                group[name][method](table.unpack(arg))
+                local _ret = group[name][method](table.unpack(arg))
+                if ret == nil then ret = _ret else ret = ret and _ret end
             end
+            return ret
         end
     end
     return group
