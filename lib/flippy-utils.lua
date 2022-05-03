@@ -1,7 +1,6 @@
 local pretty = require("cc.pretty")
 local fUtils = {}
 
-
 -- Basic Utils
 fUtils.writeC = function(color, str)
     local oldTextColor = term.getTextColor()
@@ -17,6 +16,14 @@ fUtils.printC = function(color, ...)
     term.setTextColor(oldTextColor)
 end
 
+fUtils.formatTime = function(sec)
+    local date = os.date("!*t", sec)
+    if sec >= 3600 then 
+        return ("%02d:%02d:%02d"):format(date.hour, date.min, date.sec)
+    else
+        return ("%02d:%02d"):format(date.min, date.sec)
+    end
+end
 
 -- Peripheral Utils
 fUtils.peripheral = {}
