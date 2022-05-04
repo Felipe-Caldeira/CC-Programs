@@ -1,6 +1,6 @@
-local json = require("lib/json")
 local Buffer = require("lib/Buffer")
 local fUtils = require("lib/flippy-utils")
+local json = fUtils.json
 local default_speaker = peripheral.find("speaker")
 
 local loadPackets, playAudioBuffer
@@ -18,6 +18,7 @@ local YTStream = {
     finishedLoading = false,
     finishedPlaying = false,
 
+    currentStream = nil,
     currentTime = 0,
     nextPacketId = 0,
     playbackHandlers = nil,
@@ -27,8 +28,8 @@ local YTStream = {
 YTStream.config = {
     host = "ws://127.0.0.1:3000",
     name = "ccCLient",
-    bufferSize = 10, -- in seconds
-    primedFactor = 0.75
+    bufferSize = 10, -- How many seconds of audio to buffer
+    primedFactor = 0.75 -- Percentage of buffer to be filled before stream starts playing
 }
 
 YTStream.init = function(opts, speakers)
@@ -74,15 +75,15 @@ YTStream.search = function(query, numResults)
 end
 
 YTStream.load = function(selection)
-    fUtils.writeC(colors.yellow, "Requesting stream for: ")
-    fUtils.writeC(colors.green, selection.title .. '\n')
     YTStream.ws.send(json.encode({type = "requestStream", videoInfo = selection}))
+    YTStream.currentStream = selection
     YTStream.loaded = true
 end
 
 YTStream.stop = function()
     YTStream.buffer:clear()
     YTStream.speakers.stop()
+    YTStream.currentStream = nil
     YTStream.ws.send(json.encode({type = "endStream"}))
 end
 
@@ -115,8 +116,9 @@ YTStream.resetState = function()
     YTStream.nextPacketId = 0
 end
 
-YTStream.waitForEnd = function()
+YTStream.waitForEnd = function(callback)
     while not YTStream.finishedPlaying do
+        callback()
         coroutine.yield()
     end
 end
@@ -166,7 +168,7 @@ function loadPackets()
                 YTStream.nextPacketId = (YTStream.nextPacketId + 1) % 128
                 local bufferPct = ("%.2f%%"):format((#YTStream.buffer / YTStream.config.bufferSize) * 100)
                 local bufferTimeLen = ("%.2fs"):format(#YTStream.buffer/48000)
-                local currentTimeStr = (YTStream.currentTime >= 3600) and os.date("%H:%M:%S", YTStream.currentTime) or os.date("%M:%S", YTStream.currentTime)
+                local currentTimeStr = fUtils.formatTime(YTStream.currentTime)
                 print(data.i, #data.p, bufferPct, currentTimeStr)
             else
                 -- print("PACKET", YTStream.nextPacketId, "MISSED") 
