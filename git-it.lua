@@ -4,6 +4,7 @@ local fTypes = {}
 local c = term.setTextColor
 local run = false
 local list = false
+local branchDir = ""
 
 --[[ 
     git-it => GitHub Repository Downloader by Felipe-Caldeira
@@ -37,6 +38,7 @@ function main()
     for _, file in ipairs(repoTree) do
         fTypes[file.path] = file.type
     end
+    fTypes[branchDir] = "tree"
 
     if list then listContents(targetFile, fTypes) return end
 
@@ -48,9 +50,10 @@ function git_it(file, destination)
     local pathSegments = file:split('/')
     local fileName = pathSegments[#pathSegments]
     local destPath = destination..'/'..fileName
+
     
     -- File not present
-    if fTypes[file] == nil then error("File could not be found in remote repository.")
+    if fTypes[file] == nil then error("File "..file.." could not be found in remote repository.")
     
     -- Download or run file
     elseif fTypes[file] == "blob" then
@@ -72,7 +75,6 @@ function git_it(file, destination)
 
         -- Recursively download folder subfiles
         for _, subFile in ipairs(dirFiles) do git_it(subFile, destPath) end
-
     else
         error("Unknown type: "..fTypes[file])
     end
@@ -146,7 +148,8 @@ function processArgs()
     file, destination = cleanPath(file), cleanPath(destination)
 
     -- Set file or destination if they weren't given
-    file = (file ~= "") and file or "branch-"..config.branch
+    branchDir = "branch-"..config.branch
+    file = (file ~= "") and file or branchDir
     destination = destination or shell.dir()
     return config, cleanPath(file), cleanPath(destination)
 end
@@ -204,11 +207,15 @@ function cleanPath(path)
 end
 
 function getDirFiles(dirPath, fTypes)
-    print(dirPath)
     local dirFiles = {}
     for filePath, _ in pairs(fTypes) do
-        local idx, _ = filePath:find(dirPath)
-        if (idx == 1 and filePath ~= dirPath) or (dirPath == "branch-"..config.branch) then table.insert(dirFiles, filePath) end
+        if dirPath == branchDir then 
+            local idx, _ = filePath:find('/')
+            if filePath ~= dirPath and not idx then table.insert(dirFiles, filePath) end
+        else
+            local idx, _ = filePath:find(dirPath)
+            if filePath ~= dirPath and idx == 1 then table.insert(dirFiles, filePath) end
+        end
     end
     return dirFiles
 end
