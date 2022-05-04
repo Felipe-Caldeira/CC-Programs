@@ -148,7 +148,6 @@ function processArgs()
     -- Set file or destination if they weren't given
     file = (file ~= "") and file or "branch-"..config.branch
     destination = destination or shell.dir()
-    print(file, destination)
     return config, cleanPath(file), cleanPath(destination)
 end
 
@@ -209,7 +208,7 @@ function getDirFiles(dirPath, fTypes)
     local dirFiles = {}
     for filePath, _ in pairs(fTypes) do
         local idx, _ = filePath:find(dirPath)
-        if (idx == 1 and filePath ~= dirPath) or (dirPath == "") then table.insert(dirFiles, filePath) end
+        if (idx == 1 and filePath ~= dirPath) or (dirPath == "branch-"..config.branch) then table.insert(dirFiles, filePath) end
     end
     return dirFiles
 end
