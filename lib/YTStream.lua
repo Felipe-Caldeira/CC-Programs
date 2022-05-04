@@ -118,7 +118,7 @@ end
 
 YTStream.waitForEnd = function(callback)
     while not YTStream.finishedPlaying do
-        callback()
+        if callback then callback() end
         coroutine.yield()
     end
 end
